@@ -33,8 +33,12 @@ class ProxyPerformanceSpec extends Specification {
         proxyServer = ApplicationContext.run(EmbeddedServer,
                 PropertySource.of(
                         [
-                                "proxynaut.test1.context": "/proxyOrigin",
-                                "proxynaut.test1.uri": "${server.getURL()}/origin"
+                                "proxynaut.proxies": [
+                                        [
+                                                context: "/proxyOrigin",
+                                                uri: "${server.getURL()}/origin"
+                                        ]
+                                ]
                         ])
         )
         proxyServer.start()

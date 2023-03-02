@@ -37,18 +37,21 @@ class ProxyRouteBuilder extends DefaultRouteBuilder {
                     if (log.isDebugEnabled()) {
                         log.debug("Adding route: $method $contextPath")
                     }
-                    Proxy bean
-                    Class clazz
-                    String invokeUsingMethod
-                    try {
-                        bean = applicationContext.getBean(Proxy, Qualifiers.byName(item.qualifier))
-                        clazz = bean.class
-                        invokeUsingMethod = item.invokeUsingMethod ?: "proxy"
-                    } catch (NoSuchBeanException e) {
-                        log.debug("No Proxy-extending bean for qualifier ${item.qualifier} found - using Proxy.serve method mapping instead.")
-                        clazz = ProxyProcessor
-                        invokeUsingMethod = "serve"
+                    Class clazz = null
+                    String invokeUsingMethod = null
+                    if (item.qualifier) {
+                        try {
+                            Proxy bean = applicationContext.getBean(Proxy, Qualifiers.byName(item.qualifier))
+                            clazz = bean.class
+                            invokeUsingMethod = item.invokeUsingMethod ?: "proxy"
+                        } catch (NoSuchBeanException e) {
+                            log.warn("Qualifier ${item.qualifier} did not return exactly one bean - using default class and method instead.")
+                        }
                     }
+
+                    clazz = clazz?: ProxyProcessor
+                    invokeUsingMethod = invokeUsingMethod?: "serve"
+
                     buildRoute(method, contextPath, clazz, invokeUsingMethod, HttpRequest, String)
                 }
             }

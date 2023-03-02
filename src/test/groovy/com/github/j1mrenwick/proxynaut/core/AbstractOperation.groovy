@@ -41,10 +41,16 @@ abstract class AbstractOperation extends Specification {
         destinationServer = ApplicationContext.run(EmbeddedServer)
         proxyServer = ApplicationContext.run(EmbeddedServer,
                 PropertySource.of([
-                                "proxynaut.test1.context": "/proxyOrigin",
-                                "proxynaut.test1.uri": "${destinationServer.getURL()}/origin",
-                                "proxynaut.test2.context": "/proxyJunk",
-                                "proxynaut.test2.uri": "${destinationServer.getURL()}/junk"
+                        "proxynaut.proxies": [
+                                [
+                                        context: "/proxyOrigin",
+                                        uri: "${destinationServer.getURL()}/origin",
+                                ],
+                                [
+                                        context: "/proxyJunk",
+                                        uri: "${destinationServer.getURL()}/junk",
+                                ],
+                        ]
                         ])
         )
 
