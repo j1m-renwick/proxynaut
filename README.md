@@ -6,17 +6,46 @@ Just add the dependency and put in the configuration into ```application.yml```:
 ```
 # This will set up two proxied paths...
 proxynaut:
-    api:
-        context: /api/
-        uri: https://my-backend-api-service.some-cloud.com/
-        methods: GET
-        timeoutMs: 30000
-    blobstorage:
-        context: /blobs/
-        uri: https://${my.bucket.name}.some-cloud.com/
-        methods: *
-        timeoutMs: 60000
+  proxies:
+    - context: /api/
+      uri: https://my-backend-api-service.some-cloud.com/
+      allowed-methods: ["GET"]
+      timeoutMs: 30000
+      invoke-using-method: "myMethod"
+      qualifier: "myProxyClass"
+    - context: /blobs/
+      uri: https://${my.bucket.name}.some-cloud.com/
+      allowed-methods: *
+      invoke-using-method: "myOtherMethod"
+      qualifier: "myProxyClass"
+      timeoutMs: 60000
 ```
+
+This config will invoke the methods for the below class:
+
+```
+import com.github.j1mrenwick.proxynaut.core.Proxy;
+import com.github.j1mrenwick.proxynaut.core.ProxyFactory;
+import com.github.j1mrenwick.proxynaut.core.ProxyProcessor;
+
+@ProxyFactory("myProxyClass")
+public class Test implements Proxy {
+
+    @Inject
+    protected ProxyProcessor proxy;
+
+    @Secured(SecurityRule.IS_ANONYMOUS)
+    public HttpResponse<?> myMethod(HttpRequest<ByteBuffer<?>> request, String path) {
+        return proxy.serve(request, path);
+    }
+
+    public HttpResponse<?> myOtherMethod(HttpRequest<ByteBuffer<?>> request, String path) {
+        return proxy.serve(request, path);
+    }
+}
+```
+
+If a `qualifier` is specified that does not appear in a  `ProxyFactory` annotation on a class implementing `Proxy`, then the `ProxyProcessor.serve` method will be invoked by default for proxy config. 
 
 ### Usage
 
