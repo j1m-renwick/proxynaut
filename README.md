@@ -61,11 +61,5 @@ See the example project in [proxynaut-example](proxynaut-example).
 ### To Do
 - Migrate [proxynaut-example](proxynaut-example) to use Gradle
 - investigate whether ByteBuffer data needs to be manually released in stream (see TODO)
-- Review / implement additional Proxy configuration options - the following are advertised in the code but not implemented:
-    - `include-request-headers`
-    - `exclude-request-headers`
-    - `include-response-headers`
-    - `exclude-response-headers`
-- Investigate additional Proxy configuration options
 
 License: Apache 2.0
