@@ -3,7 +3,7 @@ package com.github.j1mrenwick.proxynaut.core
 
 import java.util.concurrent.TimeUnit
 
-import javax.annotation.Nullable
+import io.micronaut.core.annotation.Nullable
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
