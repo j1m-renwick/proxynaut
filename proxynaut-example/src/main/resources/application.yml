@@ -15,10 +15,6 @@ proxynaut:
       qualifier: "secureProxy"
       invoke-using-method: "secured"
       allowed-methods: ["GET"]
-      include-request-headers: []
-      include-response-headers: []
-      include-request-cookies: []
-      include-response-cookies: []
       timeoutMs: 20000
       #  http://localhost:8080/proxy/another/page1 -> UNSECURE
     - context: /proxy/another
@@ -26,6 +22,10 @@ proxynaut:
       qualifier: "unsecureProxy"
       invoke-using-method: "unsecured"
       allowed-methods: ["GET"]
+      include-request-headers: [ "X-OUT-HEADER" ]
+      include-response-headers: [ "X-RETURN-HEADER" ]
+      include-request-cookies: [ "outCookie" ]
+      include-response-cookies: [ "returnCookie" ]
       timeoutMs: 20000
       #  http://localhost:8080/defaultproxy/page1 -> SECURE
     - context: /defaultproxy
