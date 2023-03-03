@@ -14,25 +14,18 @@ class ProxyConfigurationSpec extends Specification {
                 [
                         "proxynaut.proxies":[
                                 [
-                                        context: "/root",
-                                        uri: "http://some.server/root",
+                                        context: "/root1",
+                                        uri: "http://some.server1/root",
                                         allowedMethods: ["get", "post"],
-                                        includeRequestHeaders: ["Cookie-Control"],
-                                        excludeResponseHeaders: ["Content-Disposition"]
+                                        includeRequestHeaders: ["header1", "header2", "header3", "header4"],
+                                        includeResponseHeaders: ["header5", "header6"]
                                 ],
                                 [
-                                        context: "/root",
-                                        uri: "http://some.server/root",
-                                        allowedMethods: ["get", "put"],
-                                        includeRequestHeaders: ["Authentication"],
-                                        includeResponseHeaders: ["Cookie-Control"]
-                                ],
-                                [
-                                        context: "/root",
-                                        uri: "http://some.server/root",
+                                        context: "/root2",
+                                        uri: "http://some.server2/root",
                                         allowedMethods: ["*"],
-                                        excludeRequestHeaders: ["Authentication"],
-                                        excludeResponseHeaders: ["X-Powered-By"]
+                                        includeRequestCookies: ["cookie1", "cookie2"],
+                                        includeResponseCookies: ["cookie3"]
                                 ]
                         ]
                 ])
@@ -42,17 +35,41 @@ class ProxyConfigurationSpec extends Specification {
         applicationContext.containsBean(ProxyConfiguration)
         ProxyConfiguration proxyConfig = applicationContext.getBean(ProxyConfiguration)
 
-        ProxyConfigItem proxy = proxyConfig.proxies.get(0)
+        ProxyConfigItem proxy1 = proxyConfig.proxies.get(0)
 
-        proxy.getContext().toString() == "/root"
-        proxy.getUri().toString() == "http://some.server/root"
-        proxy.getAllowedMethods().contains("GET")
-        proxy.shouldAllowMethod(HttpMethod.GET)
-        !proxy.shouldAllowMethod(HttpMethod.PUT)
-        proxy.shouldIncludeRequestHeader("Cookie-Control")
-        !proxy.shouldIncludeRequestHeader("Authentication")
-        !proxy.shouldIncludeResponseHeader("Content-Disposition")
-        proxy.shouldIncludeResponseHeader("X-Powered-By")
+        proxy1.context.toString() == "/root1"
+        proxy1.uri.toString() == "http://some.server1/root"
+        proxy1.allowedMethods.containsAll(["GET", "POST"])
+        proxy1.shouldAllowMethod(HttpMethod.GET)
+        proxy1.shouldAllowMethod(HttpMethod.POST)
+
+        EnumSet.allOf(HttpMethod).find{it != HttpMethod.GET && it != HttpMethod.POST }.each{
+            assert !proxy1.shouldAllowMethod(it)
+        }
+        proxy1.includeRequestHeaders.size() == 4
+        proxy1.shouldIncludeRequestHeader("header1")
+        proxy1.shouldIncludeRequestHeader("header2")
+        proxy1.shouldIncludeRequestHeader("header3")
+        proxy1.shouldIncludeRequestHeader("header4")
+        proxy1.includeResponseHeaders.size() == 2
+        proxy1.shouldIncludeResponseHeader("header5")
+        proxy1.shouldIncludeResponseHeader("header6")
+
+        ProxyConfigItem proxy2 = proxyConfig.proxies.get(1)
+
+        proxy2.context.toString() == "/root2"
+        proxy2.uri.toString() == "http://some.server2/root"
+        proxy2.shouldAllowMethod(HttpMethod.GET)
+        proxy2.shouldAllowMethod(HttpMethod.PUT)
+
+        EnumSet.allOf(HttpMethod).each{
+            assert proxy2.shouldAllowMethod(it)
+        }
+        proxy2.includeRequestCookies.size() == 2
+        proxy2.shouldIncludeRequestCookie("cookie1")
+        proxy2.shouldIncludeRequestCookie("cookie2")
+        proxy2.includeResponseCookies.size() == 1
+        proxy2.shouldIncludeResponseCookie("cookie3")
     }
 
 }

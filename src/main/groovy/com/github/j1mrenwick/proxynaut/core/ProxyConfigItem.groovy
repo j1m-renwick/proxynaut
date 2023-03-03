@@ -16,11 +16,10 @@ class ProxyConfigItem {
     String context = null
     URI uri = null
     Set<String> allowedMethods = ALL_METHODS
-    Collection<String> includeRequestHeaders = Collections.emptySet()
-    // TODO add cookie removal?
-    Collection<String> excludeRequestHeaders = Collections.emptySet()
-    Collection<String> includeResponseHeaders = Collections.emptySet()
-    Collection<String> excludeResponseHeaders = Collections.emptySet()
+    Set<String> includeRequestHeaders = []
+    Set<String> includeRequestCookies = []
+    Set<String> includeResponseHeaders = []
+    Set<String> includeResponseCookies = []
     URL url
 
     void setUri(URI uri) throws MalformedURLException {
@@ -48,23 +47,19 @@ class ProxyConfigItem {
     }
 
     boolean shouldIncludeRequestHeader(String headerName) {
-        if (! includeRequestHeaders.empty) {
-            return includeRequestHeaders.find{it.equalsIgnoreCase(headerName)} != null
-        } else if (! excludeRequestHeaders.empty){
-            return excludeRequestHeaders.find{it.equalsIgnoreCase(headerName)} == null
-        } else {
-            return true
-        }
+        return includeRequestHeaders.find{it.equalsIgnoreCase(headerName)} != null
     }
 
     boolean shouldIncludeResponseHeader(String headerName) {
-        if (! includeResponseHeaders.empty) {
-            return includeResponseHeaders.find{it.equalsIgnoreCase(headerName)} != null
-        } else if (! excludeResponseHeaders.empty){
-            return excludeResponseHeaders.find{it.equalsIgnoreCase(headerName)} == null
-        } else {
-            return true
-        }
+        return includeResponseHeaders.find{it.equalsIgnoreCase(headerName)} != null
+    }
+
+    boolean shouldIncludeRequestCookie(String cookieName) {
+        return includeRequestCookies.find{it.equalsIgnoreCase(cookieName)} != null
+    }
+
+    boolean shouldIncludeResponseCookie(String cookieName) {
+        return includeResponseCookies.find{it.equalsIgnoreCase(cookieName)} != null
     }
 
 }
