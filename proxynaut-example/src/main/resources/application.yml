@@ -12,16 +12,20 @@ proxynaut:
       #  http://localhost:8080/proxy/page1 -> SECURE
     - context: /proxy
       uri: http://localhost:8080
-      allowed-methods: ["GET"]
       qualifier: "secureProxy"
       invoke-using-method: "secured"
+      allowed-methods: ["GET"]
+      include-request-headers: []
+      include-response-headers: []
+      include-request-cookies: []
+      include-response-cookies: []
       timeoutMs: 20000
       #  http://localhost:8080/proxy/another/page1 -> UNSECURE
     - context: /proxy/another
       uri: http://localhost:8080
-      allowed-methods: [ "GET" ]
       qualifier: "unsecureProxy"
       invoke-using-method: "unsecured"
+      allowed-methods: ["GET"]
       timeoutMs: 20000
       #  http://localhost:8080/defaultproxy/page1 -> SECURE
     - context: /defaultproxy

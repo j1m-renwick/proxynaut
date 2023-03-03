@@ -45,6 +45,10 @@ abstract class AbstractOperation extends Specification {
                                 [
                                         context: "/proxyOrigin",
                                         uri: "${destinationServer.getURL()}/origin",
+                                        includeRequestHeaders: ["INCLUDE-HEADER"],
+                                        includeResponseHeaders: ["INCLUDE-HEADER"],
+                                        includeRequestCookies: ["includeThisCookie"],
+                                        includeResponseCookies: ["includeThisCookie"]
                                 ],
                                 [
                                         context: "/proxyJunk",

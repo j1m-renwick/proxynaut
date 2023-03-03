@@ -1,5 +1,6 @@
 package com.github.j1mrenwick.proxynaut.core
 
+import io.micronaut.http.HttpRequest
 
 import java.util.concurrent.TimeUnit
 
@@ -31,6 +32,28 @@ class OriginController {
     @Get(uri="/ok", produces=MediaType.TEXT_PLAIN)
     HttpResponse<String> ok() {
         return HttpResponse.ok("Origin says 'ok'")
+    }
+
+    @Get(uri="/okechoheader", produces=MediaType.TEXT_PLAIN)
+    HttpResponse<String> okechoheader(HttpRequest request) {
+        HttpResponse response = HttpResponse.ok("Origin says 'ok'")
+
+        request.headers.each{
+            response.header(it.key, it.value.first())
+        }
+
+        response
+    }
+
+    @Get(uri="/okechocookie", produces=MediaType.TEXT_PLAIN)
+    HttpResponse<String> okechocookie(HttpRequest request) {
+        HttpResponse response = HttpResponse.ok("Origin says 'ok'")
+
+        request.cookies.each{
+            response.cookie(it.value)
+        }
+
+        response
     }
 
     @Get(uri="/bad", produces=MediaType.TEXT_PLAIN)
