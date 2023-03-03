@@ -8,20 +8,17 @@ import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.security.annotation.Secured;
 import io.micronaut.security.rules.SecurityRule;
+import io.micronaut.core.annotation.Nullable;
 import javax.inject.Inject;
 
-@ProxyFactory("myProxy")
-public class Test implements Proxy {
+@ProxyFactory("secureProxy")
+@Secured(SecurityRule.IS_AUTHENTICATED)
+public class SecuredProxy implements Proxy {
 
     @Inject
     protected ProxyProcessor proxy;
 
-    @Secured(SecurityRule.IS_ANONYMOUS)
-    public HttpResponse<?> test(HttpRequest<ByteBuffer<?>> request, String path) {
-        return proxy.serve(request, path);
-    }
-
-    public HttpResponse<?> proxy(HttpRequest<ByteBuffer<?>> request, String path) {
+    public HttpResponse<?> secured(HttpRequest<ByteBuffer<?>> request, @Nullable String path) {
         return proxy.serve(request, path);
     }
 }

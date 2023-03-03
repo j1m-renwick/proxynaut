@@ -19,7 +19,7 @@ import io.reactivex.processors.UnicastProcessor
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 
-import javax.annotation.Nullable
+import io.micronaut.core.annotation.Nullable
 import javax.inject.Singleton
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.CompletableFuture
@@ -44,11 +44,14 @@ class ProxyProcessor implements Closeable {
 
     @Executable
 	HttpResponse<Flowable<byte[]>> serve(HttpRequest<ByteBuffer<?>> request, @Nullable String path) {
-        if (path == null) {
-            path = ""
-        }
-        String requestPath = request.path
-        String proxyContextPath = requestPath.substring(0, requestPath.length() - path.length())
+		path = path ?: ""
+		String proxyContextPath
+		// strip trailing "/" from request path if it exists, before getting the path root
+		if (request.path.lastIndexOf("/") == request.path.length() - 1) {
+			proxyContextPath = request.path.substring(0, request.path.length() - 1)
+		} else {
+			proxyContextPath = request.path.substring(0, request.path.length() - path.length())
+		}
         Optional<ProxyConfigItem> config = findConfigForRequest(proxyContextPath)
         if (!config.present) {
         	// This should never happen, only if Micronaut's router somehow was confused

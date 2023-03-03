@@ -6,25 +6,27 @@ micronaut:
     authentication: bearer
 
 # This silly config will enable proxying http://localhost:8080/proxy/page1 to /page1
-# TODO two config must not have the same context
+
 proxynaut:
   proxies:
-    - context: /test/
-      uri: http://localhost:8080/
+      #  http://localhost:8080/proxy/page1 -> SECURE
+    - context: /proxy
+      uri: http://localhost:8080
       allowed-methods: ["GET"]
-      invoke-using-method: "test"
-      qualifier: "myProxy"
+      qualifier: "secureProxy"
+      invoke-using-method: "secured"
       timeoutMs: 20000
-    - context: /test2/
-      uri: http://localhost:8080/
+      #  http://localhost:8080/proxy/another/page1 -> UNSECURE
+    - context: /proxy/another
+      uri: http://localhost:8080
       allowed-methods: [ "GET" ]
-      invoke-using-method: "test"
-      qualifier: "myProxy"
+      qualifier: "unsecureProxy"
+      invoke-using-method: "unsecured"
       timeoutMs: 20000
-    - context: /proxy/
-      uri: http://localhost:8080/
+      #  http://localhost:8080/defaultproxy/page1 -> SECURE
+    - context: /defaultproxy
+      uri: http://localhost:8080
       allowed-methods: [ "GET" ]
-      qualifier: "myProxy"
 
 server:
   port: 8080
