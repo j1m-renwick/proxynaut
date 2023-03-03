@@ -7,11 +7,14 @@ import io.micronaut.core.io.buffer.ByteBuffer
 import io.micronaut.http.HttpMethod
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
+import io.micronaut.http.HttpResponseWrapper
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.MutableHttpRequest
 import io.micronaut.http.MutableHttpResponse
 import io.micronaut.http.client.RxStreamingHttpClient
 import io.micronaut.http.client.exceptions.HttpClientResponseException
+import io.micronaut.http.cookie.Cookie
+import io.micronaut.http.cookie.Cookies
 import io.micronaut.http.simple.SimpleHttpRequestFactory
 import io.micronaut.http.simple.SimpleHttpResponseFactory
 import io.reactivex.Flowable
@@ -52,28 +55,30 @@ class ProxyProcessor implements Closeable {
 		} else {
 			proxyContextPath = request.path.substring(0, request.path.length() - path.length())
 		}
-        Optional<ProxyConfigItem> config = findConfigForRequest(proxyContextPath)
-        if (!config.present) {
+        Optional<ProxyConfigItem> configOptional = findConfigForRequest(proxyContextPath)
+        if (!configOptional.present) {
         	// This should never happen, only if Micronaut's router somehow was confused
         	List<String> prefixes = configs.collect{it.context}
             log.warn("Matched " + request.method + " " + request.path + " to the proxy, but no configuration is found. Prefixes found in config: " + prefixes)
             return HttpResponse.status(HttpStatus.BAD_REQUEST, "Unknown proxy path: " + proxyContextPath)
         }
 
+		ProxyConfigItem config = configOptional.get()
+
         MutableHttpRequest<Object> upstreamRequest = buildRequest(request, path, config)
 
-        RxStreamingHttpClient client = findOrCreateClient(config.get())
-        log.info("About to pivot proxy call to " + config.get().uri + path)
+        RxStreamingHttpClient client = findOrCreateClient(config)
+        log.info("About to pivot proxy call to " + config.uri + path)
         Flowable<HttpResponse<ByteBuffer<?>>> upstreamResponseFlowable = client.exchangeStream(upstreamRequest).serialize()
 
         CompletableFuture<HttpResponse<Flowable<byte[]>>> futureResponse = buildResponse(config, upstreamResponseFlowable)
 
         try {
-			return futureResponse.get(config.get().timeoutMs, TimeUnit.MILLISECONDS)
+			return futureResponse.get(config.timeoutMs, TimeUnit.MILLISECONDS)
 		} catch (ExecutionException e) {
 			return HttpResponse.status(HttpStatus.INTERNAL_SERVER_ERROR, e.message)
 		} catch (TimeoutException e) {
-			log.error("Timeout occurred before getting upstream headers (configured to {} millisecond(s)", config.get().timeoutMs)
+			log.error("Timeout occurred before getting upstream headers (configured to {} millisecond(s)", config.timeoutMs)
 			return HttpResponse.status(HttpStatus.BAD_GATEWAY)
 		} catch (Throwable e) {
 			log.error("Exception occurred while proxying - ${e.toString()}")
@@ -81,7 +86,7 @@ class ProxyProcessor implements Closeable {
 		}
     }
 
-	private CompletableFuture<HttpResponse<Flowable<byte[]>>> buildResponse(Optional<ProxyConfigItem> config,
+	private CompletableFuture<HttpResponse<Flowable<byte[]>>> buildResponse(ProxyConfigItem config,
 			Flowable<HttpResponse<ByteBuffer<?>>> upstreamResponseFlowable) {
 		CompletableFuture<HttpResponse<Flowable<byte[]>>> futureResponse = new CompletableFuture<>()
         UnicastProcessor<byte[]> responseBodyFlowable = UnicastProcessor.create()
@@ -142,15 +147,28 @@ class ProxyProcessor implements Closeable {
 	}
 
 	private MutableHttpRequest<Object> buildRequest(HttpRequest<ByteBuffer<?>> request, String path,
-			Optional<ProxyConfigItem> config) {
-		String originPath = config.get().uri.toString() + path
+			ProxyConfigItem config) {
+		String originPath = config.uri.toString() + path
         String queryPart = request.uri.query
         String originUri = queryPart ? "$originPath?$queryPart" : originPath
         log.debug("Proxy'ing incoming " + request.method + " " + request.path + " -> " + originPath)
         MutableHttpRequest<Object> upstreamRequest = SimpleHttpRequestFactory.INSTANCE.create(request.method,
                 originUri)
 
-        Optional<?> body = request.getBody()
+		// TODO limitation: only supports one header value
+		for (Map.Entry<String, List<String>> header : request.headers) {
+			if (config.shouldIncludeRequestHeader(header.key)) {
+				upstreamRequest.header(header.key, header.value.first())
+			}
+		}
+
+		for (Map.Entry<String, Cookie> cookie : request.cookies) {
+			if (config.shouldIncludeRequestCookie(cookie.key)) {
+				upstreamRequest.cookie(cookie.value)
+			}
+		}
+
+		Optional<?> body = request.getBody()
         if (HttpMethod.permitsRequestBody(request.method)) {
             body.ifPresent((Object b) -> upstreamRequest.body(b))
         }
@@ -159,14 +177,32 @@ class ProxyProcessor implements Closeable {
 
 	protected HttpResponse makeResponse(HttpResponse<?> upstreamResponse,
     		Flowable<byte[]> responseFlowable,
-			Optional<ProxyConfigItem> config) {
+			ProxyConfigItem config) {
 		MutableHttpResponse<Flowable<byte[]>> httpResponse = SimpleHttpResponseFactory.INSTANCE.status(upstreamResponse.status, responseFlowable)
 		upstreamResponse.contentType.ifPresent(mediaType -> httpResponse.contentType(mediaType))
+
+		// TODO limitation: only supports one header value
+		for (Map.Entry<String, List<String>> header : upstreamResponse.headers) {
+			if (config.shouldIncludeResponseHeader(header.key)) {
+				httpResponse.header(header.key, header.value.first())
+			}
+		}
+
+		Cookies cookies = upstreamResponse instanceof HttpResponseWrapper ?
+				upstreamResponse.delegate.cookies :
+				upstreamResponse.cookies
+
+		for (Map.Entry<String, Cookie> cookie : cookies) {
+			if (config.shouldIncludeResponseCookie(cookie.key)) {
+				httpResponse.cookie(cookie.value)
+			}
+		}
+
 		return httpResponse
 	}
 
 	protected HttpResponse makeErrorResponse(HttpResponse<?> upstreamResponse,
-			Optional<ProxyConfigItem> config) {
+			ProxyConfigItem config) {
 		MutableHttpResponse<Flowable<byte[]>> httpResponse = SimpleHttpResponseFactory.INSTANCE.status(upstreamResponse.status, Flowable.empty())
 		upstreamResponse.contentType.ifPresent(mediaType -> httpResponse.contentType(mediaType))
 		return httpResponse
