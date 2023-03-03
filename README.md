@@ -10,7 +10,7 @@ proxynaut:
     - context: /api
       uri: https://my-backend-api-service.some-cloud.com
       allowed-methods: ["GET"]
-      timeoutMs: 30000
+      timeout-ms: 30000
       invoke-using-method: "myMethod"
       qualifier: "myProxyClass"
     - context: /blobs
@@ -22,8 +22,22 @@ proxynaut:
       include-response-headers: [ "X-RETURN-HEADER" ]
       include-request-cookies: [ "outCookie" ]
       include-response-cookies: [ "returnCookie" ]
-      timeoutMs: 60000
+      timeout-ms: 60000
 ```
+
+| Label                     | Description                                     | Type         | Required | Default   |
+| :---:                     | :---:                                           | :---:        | :---:    | :---:     |
+| context                   | uri path that will be proxied                   | String       | Y        | n/a       |
+| uri                       | url that the proxy will be forwarded to         | String       | Y        | n/a       |
+| allowed-methods           | HTTP request verbs that will apply to the proxy | Set\<String> | N        | `*` (all) |
+| invoke-using-method       | proxying method that will be invoked            | String       | N        | n/a       |
+| qualifier                 | proxying class that will be invoked             | String       | N        | n/a       |
+| include-request-headers   | Headers to be forwarded to the proxy uri        | Set\<String> | N        | n/a       |
+| include-response-headers  | Headers to be forwarded from the proxy uri      | Set\<String> | N        | n/a       |
+| include-request-cookies   | Cookies to be forwarded to the proxy uri        | Set\<String> | N        | n/a       |
+| include-response-cookies  | Cookies to be forwarded from the proxy uri      | Set\<String> | N        | n/a       |
+| timeout-ms                | Server timeout value for the proxy call (in ms) | Integer      | N        | `30_000`  |
+
 
 This config will invoke the methods in the below class, 
 including invoking applicable annotations (such as the Security @Secured annotation in the example) :
