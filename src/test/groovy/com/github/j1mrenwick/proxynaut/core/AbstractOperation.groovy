@@ -43,16 +43,16 @@ abstract class AbstractOperation extends Specification {
                 PropertySource.of([
                         "proxynaut.proxies": [
                                 [
-                                        context: "/proxyOrigin",
-                                        uri: "${destinationServer.getURL()}/origin",
+                                        routeFrom: "/proxyOrigin",
+                                        routeTo: "${destinationServer.getURL()}/origin",
                                         includeRequestHeaders: ["INCLUDE-HEADER"],
                                         includeResponseHeaders: ["INCLUDE-HEADER"],
                                         includeRequestCookies: ["includeThisCookie"],
                                         includeResponseCookies: ["includeThisCookie"]
                                 ],
                                 [
-                                        context: "/proxyJunk",
-                                        uri: "${destinationServer.getURL()}/junk",
+                                        routeFrom: "/proxyJunk",
+                                        routeTo: "${destinationServer.getURL()}/junk",
                                 ],
                         ]
                         ])

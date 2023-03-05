@@ -10,15 +10,15 @@ micronaut:
 proxynaut:
   proxies:
       #  http://localhost:8080/proxy/page1 -> SECURE
-    - context: /proxy
-      uri: http://localhost:8080
+    - route-from: /proxy
+      route-to: http://localhost:8080
       qualifier: "secureProxy"
       invoke-using-method: "secured"
       allowed-methods: ["GET"]
       timeoutMs: 20000
       #  http://localhost:8080/proxy/another/page1 -> UNSECURE
-    - context: /proxy/another
-      uri: http://localhost:8080
+    - route-from: /proxy/another
+      route-to: http://localhost:8080
       qualifier: "unsecureProxy"
       invoke-using-method: "unsecured"
       allowed-methods: ["GET"]
@@ -28,8 +28,8 @@ proxynaut:
       include-response-cookies: [ "returnCookie" ]
       timeoutMs: 20000
       #  http://localhost:8080/defaultproxy/page1 -> SECURE
-    - context: /defaultproxy
-      uri: http://localhost:8080
+    - route-from: /defaultproxy
+      route-to: http://localhost:8080
       allowed-methods: [ "GET" ]
 
 server:

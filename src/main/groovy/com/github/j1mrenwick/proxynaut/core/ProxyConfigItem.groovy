@@ -1,10 +1,11 @@
 package com.github.j1mrenwick.proxynaut.core
 
-
+import groovy.util.logging.Slf4j
 import io.micronaut.http.HttpMethod
 
 import java.util.stream.Collectors
 
+@Slf4j
 class ProxyConfigItem {
 
     final static String ASTERISK = "*"
@@ -13,18 +14,21 @@ class ProxyConfigItem {
     String invokeUsingMethod
     String qualifier
     int timeoutMs = 30_000
-    String context = null
-    URI uri = null
+    String routeFrom
+    String routeTo
     Set<String> allowedMethods = ALL_METHODS
     Set<String> includeRequestHeaders = []
     Set<String> includeRequestCookies = []
     Set<String> includeResponseHeaders = []
     Set<String> includeResponseCookies = []
-    URL url
 
-    void setUri(URI uri) throws MalformedURLException {
-        this.uri = uri
-        this.url = uri.toURL()
+    void setRouteTo(String routeTo) throws MalformedURLException {
+        this.routeTo = routeTo
+        try {
+            routeTo.toURL()
+        } catch (Exception e) {
+            log.error("route-to value: $routeTo is not a valid URL")
+        }
     }
 
     private static String safeUpper(String s) {

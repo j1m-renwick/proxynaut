@@ -35,8 +35,8 @@ class ProxyPerformanceSpec extends Specification {
                         [
                                 "proxynaut.proxies": [
                                         [
-                                                context: "/proxyOrigin",
-                                                uri: "${server.getURL()}/origin"
+                                                routeFrom: "/proxyOrigin",
+                                                routeTo: "${server.getURL()}/origin"
                                         ]
                                 ]
                         ])

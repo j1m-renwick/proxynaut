@@ -58,7 +58,7 @@ class ProxyProcessor implements Closeable {
         Optional<ProxyConfigItem> configOptional = findConfigForRequest(proxyContextPath)
         if (!configOptional.present) {
         	// This should never happen, only if Micronaut's router somehow was confused
-        	List<String> prefixes = configs.collect{it.context}
+        	List<String> prefixes = configs.collect{it.routeFrom}
             log.warn("Matched " + request.method + " " + request.path + " to the proxy, but no configuration is found. Prefixes found in config: " + prefixes)
             return HttpResponse.status(HttpStatus.BAD_REQUEST, "Unknown proxy path: " + proxyContextPath)
         }
@@ -68,7 +68,7 @@ class ProxyProcessor implements Closeable {
         MutableHttpRequest<Object> upstreamRequest = buildRequest(request, path, config)
 
         RxStreamingHttpClient client = findOrCreateClient(config)
-        log.info("About to pivot proxy call to " + config.uri + path)
+        log.info("About to pivot proxy call to " + config.routeTo + path)
         Flowable<HttpResponse<ByteBuffer<?>>> upstreamResponseFlowable = client.exchangeStream(upstreamRequest).serialize()
 
         CompletableFuture<HttpResponse<Flowable<byte[]>>> futureResponse = buildResponse(config, upstreamResponseFlowable)
@@ -148,7 +148,7 @@ class ProxyProcessor implements Closeable {
 
 	private MutableHttpRequest<Object> buildRequest(HttpRequest<ByteBuffer<?>> request, String path,
 			ProxyConfigItem config) {
-		String originPath = config.uri.toString() + path
+		String originPath = config.routeTo + path
         String queryPart = request.uri.query
         String originUri = queryPart ? "$originPath?$queryPart" : originPath
         log.debug("Proxy'ing incoming " + request.method + " " + request.path + " -> " + originPath)
@@ -211,13 +211,13 @@ class ProxyProcessor implements Closeable {
 
 	private RxStreamingHttpClient findOrCreateClient(ProxyConfigItem config) {
         return proxyMap.computeIfAbsent("${config.qualifier}:${config.invokeUsingMethod}", n -> {
-            log.debug("Creating proxy for " + config.url)
-            return beanContext.createBean(RxStreamingHttpClient, new Object[]{config.url})
+            log.debug("Creating proxy for " + config.routeTo)
+            return beanContext.createBean(RxStreamingHttpClient, new Object[]{config.routeTo.toURL()})
         })
     }
 
     private Optional<ProxyConfigItem> findConfigForRequest(String prefix) {
-        return Optional.ofNullable(configs.find{it.context == prefix})
+        return Optional.ofNullable(configs.find{it.routeFrom == prefix})
     }
 
     @Override

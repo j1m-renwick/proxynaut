@@ -14,15 +14,15 @@ class ProxyConfigurationSpec extends Specification {
                 [
                         "proxynaut.proxies":[
                                 [
-                                        context: "/root1",
-                                        uri: "http://some.server1/root",
+                                        routeFrom: "/root1",
+                                        routeTo: "http://some.server1/root",
                                         allowedMethods: ["get", "post"],
                                         includeRequestHeaders: ["header1", "header2", "header3", "header4"],
                                         includeResponseHeaders: ["header5", "header6"]
                                 ],
                                 [
-                                        context: "/root2",
-                                        uri: "http://some.server2/root",
+                                        routeFrom: "/root2",
+                                        routeTo: "http://some.server2/root",
                                         allowedMethods: ["*"],
                                         includeRequestCookies: ["cookie1", "cookie2"],
                                         includeResponseCookies: ["cookie3"]
@@ -37,8 +37,8 @@ class ProxyConfigurationSpec extends Specification {
 
         ProxyConfigItem proxy1 = proxyConfig.proxies.get(0)
 
-        proxy1.context.toString() == "/root1"
-        proxy1.uri.toString() == "http://some.server1/root"
+        proxy1.routeFrom == "/root1"
+        proxy1.routeTo == "http://some.server1/root"
         proxy1.allowedMethods.containsAll(["GET", "POST"])
         proxy1.shouldAllowMethod(HttpMethod.GET)
         proxy1.shouldAllowMethod(HttpMethod.POST)
@@ -57,8 +57,8 @@ class ProxyConfigurationSpec extends Specification {
 
         ProxyConfigItem proxy2 = proxyConfig.proxies.get(1)
 
-        proxy2.context.toString() == "/root2"
-        proxy2.uri.toString() == "http://some.server2/root"
+        proxy2.routeFrom.toString() == "/root2"
+        proxy2.routeTo.toString() == "http://some.server2/root"
         proxy2.shouldAllowMethod(HttpMethod.GET)
         proxy2.shouldAllowMethod(HttpMethod.PUT)
 

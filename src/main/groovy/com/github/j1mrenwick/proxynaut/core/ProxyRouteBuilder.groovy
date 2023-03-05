@@ -31,7 +31,7 @@ class ProxyRouteBuilder extends DefaultRouteBuilder {
             log.debug("Building proxy routes...")
         }
         for (ProxyConfigItem item : config.proxies) {
-            String contextPath = item.context + "{+path:?}"
+            String contextPath = item.routeFrom + "{+path:?}"
             for (HttpMethod method : HttpMethod.values()) {
                 if (item.shouldAllowMethod(method)) {
                     if (log.isDebugEnabled()) {
