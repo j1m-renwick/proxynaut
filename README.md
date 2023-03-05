@@ -80,6 +80,19 @@ See the example project in [proxynaut-example](proxynaut-example).
 - Start the [proxynaut-example](proxynaut-example) app
 - Navigate to `http://localhost:8080/proxy/another/page1`
 
+### Accessing @Secured paths
+To access `@Secured` paths, call `POST http://localhost:8080/login` with the JSON body:
+
+```
+{
+    "username": "letmein",
+    "password": "dummy"
+}
+```
+
+and then use the returned `access_token` in future calls as a bearer token via the `Authorization` header. 
+
+
 ### To Do
 - investigate whether ByteBuffer data needs to be manually released in stream (see TODO)
 
